@@ -1,22 +1,18 @@
 #!/usr/bin/python3
-# -*- coding: utf-8 -*-
-
-"""
-ZetCode PyQt5 tutorial 
-
-This example shows a tooltip on 
-a window and a button.
-
-Author: Jan Bodnar
-Website: zetcode.com 
-Last edited: August 2017
-"""
 
 import sys
+from collections import OrderedDict
+
+import vtk
+from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QWidget, QToolTip, QAction,
+from PyQt5.QtWidgets import (QWidget, QToolTip, QAction, QTextEdit, QFileDialog,
     QPushButton, QApplication, QMainWindow, QSlider, QHBoxLayout, QVBoxLayout, QLCDNumber)
 from PyQt5.QtGui import QFont, QIcon
+
+import vtkField
+from pbcpy.formats.qepp import PP
 
 
 class PbcPyQt(QMainWindow):
@@ -25,12 +21,13 @@ class PbcPyQt(QMainWindow):
         super().__init__()
 
         self.openedFiles = []
-        
         self.initUI()
         
         
     def initUI(self):
-        
+
+        self.setAcceptDrops(True)
+
         self.initMenuBar()
         self.initStatusBar()
         self.initMainArea()
@@ -45,7 +42,7 @@ class PbcPyQt(QMainWindow):
 
         fileMenu = menubar.addMenu('&File')
         fileOpenAct = QAction(QIcon.fromTheme('document-open'), "&Open", self)
-        fileOpenAct.triggered.connect(self.printMsg)
+        fileOpenAct.triggered.connect(self.fileDialog)
         fileOpenAct.setShortcut('Ctrl+O')
 
         fileCloseAct = QAction(QIcon.fromTheme('window-close'), "&Close", self)
@@ -73,17 +70,40 @@ class PbcPyQt(QMainWindow):
     def onIsoChange(self, n):
         print("I have changed {}".format(10.**n))
 
+    def fileDialog(self):
+        fname = QFileDialog.getOpenFileName(self, "", "", "Quantum Espresso (*.pp)")
+
+        if fname[0]:
+            self.processFile(fname[0])
+
+
+    def processFile(self, filename):
+        if filename in self.openedFiles:
+            return
+        self.openedFiles.append(filename)
+        i = len(self.openedFiles)
+
+        system = PP(filename).read()
+        for atom in system.ions:
+            vtkField.add_atom(atom.label, atom.pos, self.ren)
+        vtkField.add_field(system.field, self.ren,k=i)
+
     def initMainArea(self):
         pass
-        # vbox = QVBoxLayout()
-        # lcd = QLCDNumber(self)
-        # isoSlider = QSlider(Qt.Horizontal, self)
-        # vbox.addWidget(lcd)
-        # vbox.addWidget(isoSlider)
-        # self.setLayout(vbox)
+        self.vtkWidget = QVTKRenderWindowInteractor()
+        self.setCentralWidget(self.vtkWidget)
+        self.ren = vtk.vtkRenderer()
+        self.ren.SetBackground(1, 1, 1)
+        self.ren.ResetCamera()
+        self.vtkWidget.GetRenderWindow().AddRenderer(self.ren)
+        self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
+        self.iren.Initialize()
+        self.iren.Start()
+
 
     def addFile(self, filename):
         pass
+
 
     def closeFiles(self):
         self.closedFiles = []

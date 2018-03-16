@@ -3,6 +3,7 @@ __pycache__/
 .cache/
 .coverage
 *.egg-info/
+*.pp
 tests/test.xsf
 dist/
 build/
