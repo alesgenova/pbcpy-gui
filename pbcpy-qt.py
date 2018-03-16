@@ -20,7 +20,8 @@ class PbcPyQt(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.openedFiles = []
+        self.openedFiles = {}
+        self.isoValue = -1
         self.initUI()
         
         
@@ -46,6 +47,7 @@ class PbcPyQt(QMainWindow):
         fileOpenAct.setShortcut('Ctrl+O')
 
         fileCloseAct = QAction(QIcon.fromTheme('window-close'), "&Close", self)
+        fileCloseAct.triggered.connect(self.closeFiles)
         fileCloseAct.setShortcut('Ctrl+W')
 
         fileQuitAct = QAction(QIcon.fromTheme('application-exit'), "&Quit", self)
@@ -68,7 +70,11 @@ class PbcPyQt(QMainWindow):
         print("I have been clicked")
 
     def onIsoChange(self, n):
-        print("I have changed {}".format(10.**n))
+        self.isoValue = 10.**n
+        for key, item in self.openedFiles.items():
+            item["contour"].SetValue(0,self.isoValue)
+        self.vtkWidget.GetRenderWindow().Render()
+        #print("I have changed {}".format(10.**n))
 
     def fileDialog(self):
         fname = QFileDialog.getOpenFileName(self, "", "", "Quantum Espresso (*.pp)")
@@ -80,13 +86,14 @@ class PbcPyQt(QMainWindow):
     def processFile(self, filename):
         if filename in self.openedFiles:
             return
-        self.openedFiles.append(filename)
         i = len(self.openedFiles)
+        self.openedFiles[filename] = {}
 
         system = PP(filename).read()
         for atom in system.ions:
             vtkField.add_atom(atom.label, atom.pos, self.ren)
-        vtkField.add_field(system.field, self.ren,k=i)
+        self.openedFiles[filename]["contour"] = vtkField.add_field(system.field, self.ren,k=i)
+        self.vtkWidget.GetRenderWindow().Render()
 
     def initMainArea(self):
         pass
@@ -106,7 +113,10 @@ class PbcPyQt(QMainWindow):
 
 
     def closeFiles(self):
-        self.closedFiles = []
+        print("Closing Files")
+        self.ren.RemoveAllViewProps()
+        self.vtkWidget.GetRenderWindow().Render()
+        self.openedFiles = {}
         pass
         
         

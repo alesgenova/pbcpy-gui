@@ -74,6 +74,8 @@ def add_field(field, renderer, iso=0.1, k=0):
 
     print("Done!")
 
+    return contour
+
 
 def add_atom(label, pos, renderer):
     r = 1.0
