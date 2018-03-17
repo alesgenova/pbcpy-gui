@@ -98,20 +98,23 @@ class PbcPyQt(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, "", "", "Quantum Espresso (*.pp)")
         import time
         if fname[0]:
-            if fname[0].endswith(".pp"):
-                self.processFile(fname[0])
+            self.processFile(fname[0])
 
     def folderDialog(self):
         dialog = QFileDialog()
-        folder_path = dialog.getExistingDirectory(None, "Select Folder")
-        if folder_path:
-            for f in os.listdir(folder_path):
-                if f.endswith(".pp"):
-                    self.processFile(os.path.join(folder_path, f))
-        return
+        dirname = dialog.getExistingDirectory(None, "Select Folder")
+        if dirname:
+            self.processFolder(dirname)
+
+
+    def processFolder(self, dirname):
+        for f in os.listdir(dirname):
+            self.processFile(os.path.join(dirname, f))
 
 
     def processFile(self, filename):
+        if not filename.endswith(".pp"):
+            return
         if filename in self.openedFiles:
             return
 
@@ -148,6 +151,21 @@ class PbcPyQt(QMainWindow):
         self.vtkWidget.GetRenderWindow().Render()
         self.openedFiles = {}
         pass
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        #files = [unicode(u.toLocalFile()) for u in event.mimeData().urls()]
+        for f in event.mimeData().urls():
+            path = f.toLocalFile()
+            if os.path.isdir(path):
+                self.processFolder(path)
+            elif os.path.isfile(path):
+                self.processFile(path)
 
         
         
