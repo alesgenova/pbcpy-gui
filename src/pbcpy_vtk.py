@@ -1,10 +1,25 @@
+import os
 import vtk
 from vtk.numpy_interface import dataset_adapter
 from vtk.util import numpy_support
 import numpy as np
 
 
-def add_field(field, renderer, iso=0.1, k=0):
+class Subsystem(object):
+
+    def __init__(self, filename, contour, mapper, actor):
+        self.filename = filename
+        self.shortname = os.path.split(filename)[-1]
+        #self.field = field
+        self.contour = contour
+        self.mapper = mapper
+        self.actor = actor
+
+    def __str__(self):
+        return self.shortname
+
+
+def add_field(field, renderer, iso=0.1, k=0, filename=""):
     
     spacing = np.zeros(3)
     for i in range(3):
@@ -43,7 +58,7 @@ def add_field(field, renderer, iso=0.1, k=0):
 
     print("Done!")
 
-    return contour
+    return Subsystem(filename, contour, m, a)
 
 def add_atom(label, pos, renderer):
     ball = vtk.vtkSphereSource()

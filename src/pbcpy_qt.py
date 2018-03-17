@@ -8,9 +8,12 @@ import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import (QAction, QFileDialog, QLabel,
-                            QApplication, QMainWindow, QSlider)
+                            QApplication, QMainWindow, QSlider,
+                            QSplitter, QFrame, QListWidget,
+                            QListView)
+
 
 import pbcpy_vtk
 from pbcpy.formats.qepp import PP
@@ -25,14 +28,14 @@ class PbcPyQt(QMainWindow):
         self.status = "Ready"
         self.initUI()
         
-        
+
     def initUI(self):
 
         self.setAcceptDrops(True)
 
         self.initMenuBar()
         self.initStatusBar()
-        self.initVtkArea()
+        self.initMainArea()
 
         self.setGeometry(500, 500, 900, 600)
         self.setWindowTitle('PbcPy')    
@@ -95,7 +98,7 @@ class PbcPyQt(QMainWindow):
         self.isoValue = 10.**n
         self.isoLabel1.setText("{}".format(self.isoValue))
         for key, item in self.openedFiles.items():
-            item["contour"].SetValue(0,self.isoValue)
+            item.contour.SetValue(0,self.isoValue)
         self.vtkWidget.GetRenderWindow().Render()
 
 
@@ -124,7 +127,7 @@ class PbcPyQt(QMainWindow):
             return
 
         i = len(self.openedFiles)
-        self.openedFiles[filename] = {}
+        #self.openedFiles[filename] = {}
 
         #self.statusLabel.setText("Loading")
 
@@ -136,15 +139,26 @@ class PbcPyQt(QMainWindow):
         for atom in system.ions:
             pbcpy_vtk.add_atom(atom.label, atom.pos, self.ren)
 
-        self.openedFiles[filename]["contour"] = pbcpy_vtk.add_field(system.field, self.ren, iso=self.isoValue , k=i)
+        self.openedFiles[filename] = pbcpy_vtk.add_field(system.field, self.ren,
+                                                         iso=self.isoValue , k=i, filename=filename)
         self.vtkWidget.GetRenderWindow().Render()
+
+        self.addListItem(self.openedFiles[filename])
 
         #self.statusLabel.setText("Ready")
 
+    def initMainArea(self):
+        self.splitter = QSplitter(Qt.Horizontal)
+        self.initVtkArea()
+        self.initListWidget()
+        #topleft = QFrame(self)
+        self.splitter.addWidget(self.listWidget)
+        self.splitter.addWidget(self.vtkWidget)
+        self.setCentralWidget(self.splitter)
 
     def initVtkArea(self):
         self.vtkWidget = QVTKRenderWindowInteractor()
-        self.setCentralWidget(self.vtkWidget)
+        #self.setCentralWidget(self.vtkWidget)
         self.ren = vtk.vtkRenderer()
         self.ren.SetBackground(0.9, 0.9, 0.9)
         self.ren.ResetCamera()
@@ -153,12 +167,29 @@ class PbcPyQt(QMainWindow):
         self.iren.Initialize()
         self.iren.Start()
 
+    def initListWidget(self):
+        self.listWidget = QListView(self)
+        self.listWidget.setMaximumWidth(200)
+        self.listWidget.setSpacing(2)
+        self.listModel = QStandardItemModel(self.listWidget)
+        self.listWidget.setModel(self.listModel)
+
+    def addListItem(self, subsystem):
+        #self.listWidget.addItem(subsystem.shortname)
+        item = QStandardItem(subsystem.shortname)
+        item.setCheckable(True)
+        item.setCheckState(2)
+        self.listModel.appendRow(item)
+
 
     def closeFiles(self):
         print("Closing Files")
         self.ren.RemoveAllViewProps()
         self.vtkWidget.GetRenderWindow().Render()
+        n = len(self.openedFiles)
+        self.listModel.removeRows(0,n)
         self.openedFiles = {}
+        
 
 
     def dragEnterEvent(self, event):
