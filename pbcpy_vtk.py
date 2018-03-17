@@ -4,36 +4,6 @@ from vtk.util import numpy_support
 import numpy as np
 
 
-def init_window():
-    import vtk
-    # Create the graphics structure. The renderer renders into the render
-    # window. The render window interactor captures mouse events and will
-    # perform appropriate camera or actor manipulation depending on the
-    # nature of the events.
-    ren = vtk.vtkRenderer()
-    renWin = vtk.vtkRenderWindow()
-    renWin.AddRenderer(ren)
-    iren = vtk.vtkRenderWindowInteractor()
-    iren.SetRenderWindow(renWin)
-    # Add the actors to the renderer, set the background and size
-    #ren.AddActor(cylinderActor)
-    ren.SetBackground(1, 1, 1)
-    renWin.SetSize(400, 400)
-
-    # This allows the interactor to initalize itself. It has to be
-    # called before an event loop.
-    #iren.Initialize()
-
-    # We'll zoom in a little by accessing the camera and invoking a "Zoom"
-    # method on it.
-    ren.ResetCamera()
-    #ren.GetActiveCamera().Zoom(1.5)
-    # Start the event loop.
-    #iren.Start()
-    
-    return ren, renWin, iren
-
-
 def add_field(field, renderer, iso=0.1, k=0):
     
     spacing = np.zeros(3)
@@ -52,7 +22,6 @@ def add_field(field, renderer, iso=0.1, k=0):
     contour.SetValue(0, iso)
     contour.SetInputData(iD)
    
-    
     #stripper = vtk.vtkStripper()
     #stripper.SetInputConnection(contour.GetOutputPort())
 
@@ -76,9 +45,7 @@ def add_field(field, renderer, iso=0.1, k=0):
 
     return contour
 
-
 def add_atom(label, pos, renderer):
-    r = 1.0
     ball = vtk.vtkSphereSource()
     ball.SetRadius(label2radius(label))
     ball.SetCenter(pos)
@@ -94,7 +61,6 @@ def add_atom(label, pos, renderer):
     # Here we set its color and rotate it -22.5 degrees.
     ballActor = vtk.vtkActor()
     ballActor.SetMapper(ballMapper)
-    #cylinderActor.SetMapper(data_vtk)
     ballActor.GetProperty().SetColor(label2color(label))
     
     renderer.AddActor(ballActor)
@@ -131,26 +97,56 @@ def i2color(i):
     ]
     return colors[j]
 
-def render_pp(filename):
-    from pbcpy.formats.qepp import PP
-    system = PP(filename).read()
-    render_system(system)
+
+# def init_window():
+#     import vtk
+#     # Create the graphics structure. The renderer renders into the render
+#     # window. The render window interactor captures mouse events and will
+#     # perform appropriate camera or actor manipulation depending on the
+#     # nature of the events.
+#     ren = vtk.vtkRenderer()
+#     renWin = vtk.vtkRenderWindow()
+#     renWin.AddRenderer(ren)
+#     iren = vtk.vtkRenderWindowInteractor()
+#     iren.SetRenderWindow(renWin)
+#     # Add the actors to the renderer, set the background and size
+#     #ren.AddActor(cylinderActor)
+#     ren.SetBackground(1, 1, 1)
+#     renWin.SetSize(400, 400)
+
+#     # This allows the interactor to initalize itself. It has to be
+#     # called before an event loop.
+#     #iren.Initialize()
+
+#     # We'll zoom in a little by accessing the camera and invoking a "Zoom"
+#     # method on it.
+#     ren.ResetCamera()
+#     #ren.GetActiveCamera().Zoom(1.5)
+#     # Start the event loop.
+#     #iren.Start()
     
-def render_system(system):
-    ren, win, iren = init_window()
+#     return ren, renWin, iren
+
+# def render_pp(filename):
+#     from pbcpy.formats.qepp import PP
+#     system = PP(filename).read()
+#     render_system(system)
     
-    for atom in system.ions:
-        add_atom(atom.label, atom.pos, ren)
+# def render_system(system):
+#     ren, win, iren = init_window()
+    
+#     for atom in system.ions:
+#         add_atom(atom.label, atom.pos, ren)
         
-    iso = 0.1
-    i = 6
-    add_field(system.field, ren, iso, i)
+#     iso = 0.1
+#     i = 6
+#     add_field(system.field, ren, iso, i)
     
-    iren.Initialize()
-    win.Render()
-    iren.Start()
+#     iren.Initialize()
+#     win.Render()
+#     iren.Start()
     
-    win.Finalize()
-    iren.TerminateApp()
-    del win, iren
+#     win.Finalize()
+#     iren.TerminateApp()
+#     del win, iren
 

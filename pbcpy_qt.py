@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 
 import sys
 import os
@@ -8,9 +8,9 @@ import vtk
 from vtk.qt.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QWidget, QToolTip, QAction, QTextEdit, QFileDialog, QLabel,
-    QPushButton, QApplication, QMainWindow, QSlider, QHBoxLayout, QVBoxLayout, QLCDNumber)
-from PyQt5.QtGui import QFont, QIcon
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QAction, QFileDialog, QLabel,
+                            QApplication, QMainWindow, QSlider)
 
 import pbcpy_vtk
 from pbcpy.formats.qepp import PP
@@ -20,7 +20,6 @@ class PbcPyQt(QMainWindow):
     
     def __init__(self):
         super().__init__()
-
         self.openedFiles = {}
         self.isoValue = 10.**-2
         self.status = "Ready"
@@ -33,14 +32,15 @@ class PbcPyQt(QMainWindow):
 
         self.initMenuBar()
         self.initStatusBar()
-        self.initMainArea()
+        self.initVtkArea()
 
         self.setGeometry(500, 500, 900, 600)
-        self.setWindowTitle('PbcPy-Qt')    
+        self.setWindowTitle('PbcPy')    
         self.show()
 
     def initMenuBar(self):
         menubar = self.menuBar()
+        menubar.hide()
         toolbar = self.addToolBar("Menu")
 
         fileMenu = menubar.addMenu('&File')
@@ -61,8 +61,13 @@ class PbcPyQt(QMainWindow):
         fileQuitAct.setShortcut('Ctrl+Q')
         fileQuitAct.triggered.connect(QApplication.instance().quit)
 
-        fileMenu.addActions([fileOpenAct, fileFolderAct, fileCloseAct,fileQuitAct])
-        toolbar.addActions([fileOpenAct, fileFolderAct, fileCloseAct,fileQuitAct])
+        fileMenu.addActions([fileOpenAct, fileFolderAct])
+        fileMenu.addSeparator()
+        fileMenu.addActions([fileCloseAct,fileQuitAct])
+
+        toolbar.addActions([fileOpenAct, fileFolderAct])
+        toolbar.addSeparator()
+        toolbar.addActions([fileCloseAct,fileQuitAct])
 
 
     def initStatusBar(self):
@@ -70,18 +75,17 @@ class PbcPyQt(QMainWindow):
         #self.statusLabel = QLabel(self.status, self)
         self.isoLabel0 = QLabel("Iso Value: ".format(self.isoValue), self)
         self.isoLabel1 = QLabel("{}".format(self.isoValue), self)
+
         self.isoSlider = QSlider(Qt.Horizontal, self)
         self.isoSlider.setMaximumWidth(150)
-        #isoSlider.setRange()
         self.isoSlider.setRange(-5, -1)
         self.isoSlider.setValue(-2)
         self.isoSlider.valueChanged.connect(self.onIsoChange, self.isoSlider.value())
+
         self.statusbar.addWidget(self.isoLabel0)
         self.statusbar.addWidget(self.isoSlider)
         self.statusbar.addWidget(self.isoLabel1)
-        #self.statusbar.addWidget(self.statusLabel)
-        
-        #self.statusbar.showMessage('Ready')
+
 
     def printMsg(self):
         print("I have been clicked")
@@ -92,7 +96,7 @@ class PbcPyQt(QMainWindow):
         for key, item in self.openedFiles.items():
             item["contour"].SetValue(0,self.isoValue)
         self.vtkWidget.GetRenderWindow().Render()
-        #print("I have changed {}".format(10.**n))
+
 
     def fileDialog(self):
         fname = QFileDialog.getOpenFileName(self, "", "", "Quantum Espresso (*.pp)")
@@ -128,8 +132,7 @@ class PbcPyQt(QMainWindow):
         self.vtkWidget.GetRenderWindow().Render()
 
 
-    def initMainArea(self):
-        pass
+    def initVtkArea(self):
         self.vtkWidget = QVTKRenderWindowInteractor()
         self.setCentralWidget(self.vtkWidget)
         self.ren = vtk.vtkRenderer()
@@ -141,16 +144,12 @@ class PbcPyQt(QMainWindow):
         self.iren.Start()
 
 
-    def addFile(self, filename):
-        pass
-
-
     def closeFiles(self):
         print("Closing Files")
         self.ren.RemoveAllViewProps()
         self.vtkWidget.GetRenderWindow().Render()
         self.openedFiles = {}
-        pass
+
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls():
@@ -167,6 +166,12 @@ class PbcPyQt(QMainWindow):
             elif os.path.isfile(path):
                 self.processFile(path)
 
+    def keyPressEvent(self, e):
+        if e.key() == Qt.Key_Alt:
+            if self.menuBar().isVisible():
+                self.menuBar().hide()
+            else:
+                self.menuBar().show()
         
         
 if __name__ == '__main__':
