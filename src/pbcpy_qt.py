@@ -85,6 +85,7 @@ class PbcPyQt(QMainWindow):
         self.statusbar.addWidget(self.isoLabel0)
         self.statusbar.addWidget(self.isoSlider)
         self.statusbar.addWidget(self.isoLabel1)
+        #self.statusbar.addWidget(self.statusLabel)
 
 
     def printMsg(self):
@@ -125,11 +126,20 @@ class PbcPyQt(QMainWindow):
         i = len(self.openedFiles)
         self.openedFiles[filename] = {}
 
+        #self.statusLabel.setText("Loading")
+
         system = PP(filename).read()
+
+        if i == 0:
+            pbcpy_vtk.add_cell(system.cell, self.ren)
+
         for atom in system.ions:
             pbcpy_vtk.add_atom(atom.label, atom.pos, self.ren)
+
         self.openedFiles[filename]["contour"] = pbcpy_vtk.add_field(system.field, self.ren, iso=self.isoValue , k=i)
         self.vtkWidget.GetRenderWindow().Render()
+
+        #self.statusLabel.setText("Ready")
 
 
     def initVtkArea(self):
@@ -158,7 +168,6 @@ class PbcPyQt(QMainWindow):
             event.ignore()
 
     def dropEvent(self, event):
-        #files = [unicode(u.toLocalFile()) for u in event.mimeData().urls()]
         for f in event.mimeData().urls():
             path = f.toLocalFile()
             if os.path.isdir(path):

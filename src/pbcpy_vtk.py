@@ -50,20 +50,31 @@ def add_atom(label, pos, renderer):
     ball.SetRadius(label2radius(label))
     ball.SetCenter(pos)
 
-    # The mapper is responsible for pushing the geometry into the graphics
-    # library. It may also do color mapping, if scalars or other
-    # attributes are defined.
     ballMapper = vtk.vtkPolyDataMapper()
     ballMapper.SetInputConnection(ball.GetOutputPort())
 
-    # The actor is a grouping mechanism: besides the geometry (mapper), it
-    # also has a property, transformation matrix, and/or texture map.
-    # Here we set its color and rotate it -22.5 degrees.
     ballActor = vtk.vtkActor()
     ballActor.SetMapper(ballMapper)
     ballActor.GetProperty().SetColor(label2color(label))
     
     renderer.AddActor(ballActor)
+
+
+def add_cell(grid, renderer):
+    cell = vtk.vtkCubeSource()
+    cell.SetBounds(0., grid.lattice[0,0], 0., grid.lattice[1,1], 0., grid.lattice[2,2])
+
+    m = vtk.vtkPolyDataMapper()
+    m.SetInputConnection(cell.GetOutputPort())
+
+    a = vtk.vtkActor()
+    a.SetMapper(m)
+    a.GetProperty().SetColor((0.7,0.7,0.7))
+    a.GetProperty().SetOpacity(0.05)
+    a.GetProperty().SetEdgeColor(0.0, 0.0, 0.0)
+    a.GetProperty().EdgeVisibilityOn()
+
+    renderer.AddActor(a)
 
     
 def label2color(label):
