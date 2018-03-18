@@ -75,7 +75,7 @@ class PbcPyQt(QMainWindow):
     def initStatusBar(self):
         self.statusbar = self.statusBar()
         #self.statusLabel = QLabel(self.status, self)
-        self.isoLabel0 = QLabel("Iso Value: ".format(self.isoValue), self)
+        self.isoLabel0 = QLabel("Iso value: ".format(self.isoValue), self)
         self.isoLabel1 = QLabel("{}".format(self.isoValue), self)
 
         self.isoSlider = QSlider(Qt.Horizontal, self)
@@ -90,9 +90,6 @@ class PbcPyQt(QMainWindow):
         #self.statusbar.addWidget(self.statusLabel)
 
 
-    def printMsg(self):
-        print("I have been clicked")
-
     def onIsoChange(self, n):
         self.isoValue = 10.**n
         self.isoLabel1.setText("{}".format(self.isoValue))
@@ -103,7 +100,6 @@ class PbcPyQt(QMainWindow):
 
     def fileDialog(self):
         fname = QFileDialog.getOpenFileName(self, "", "", "Quantum Espresso (*.pp)")
-        import time
         if fname[0]:
             self.processFile(fname[0])
 
