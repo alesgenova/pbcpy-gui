@@ -11,8 +11,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import (QAction, QFileDialog, QLabel,
                             QApplication, QMainWindow, QSlider,
-                            QSplitter, QFrame, QListWidget,
-                            QListView)
+                            QSplitter, QFrame, QListView )
 
 
 import pbcpy_vtk
@@ -154,9 +153,9 @@ class PbcPyQt(QMainWindow):
     def initMainArea(self):
         self.splitter = QSplitter(Qt.Horizontal)
         self.initVtkArea()
-        self.initListWidget()
+        self.initListView()
         #topleft = QFrame(self)
-        self.splitter.addWidget(self.listWidget)
+        self.splitter.addWidget(self.listView)
         self.splitter.addWidget(self.vtkWidget)
         self.setCentralWidget(self.splitter)
 
@@ -171,17 +170,17 @@ class PbcPyQt(QMainWindow):
         self.iren.Initialize()
         self.iren.Start()
 
-    def initListWidget(self):
-        self.listWidget = QListView(self)
-        self.listWidget.setMaximumWidth(200)
-        self.listWidget.setSpacing(2)
-        self.listModel = QStandardItemModel(self.listWidget)
+    def initListView(self):
+        self.listView = QListView(self)
+        self.listView.setMaximumWidth(200)
+        self.listView.setSpacing(2)
+        self.listModel = QStandardItemModel(self.listView)
         self.listModel.itemChanged.connect(self.onItemChanged)
-        self.listWidget.setModel(self.listModel)
+        self.listView.setModel(self.listModel)
 
 
     def addListItem(self, subsystem):
-        #self.listWidget.addItem(subsystem.shortname)
+        #self.listView.addItem(subsystem.shortname)
         item = QStandardItem(subsystem.shortname)
         item.setCheckable(True)
         item.setCheckState(2)
