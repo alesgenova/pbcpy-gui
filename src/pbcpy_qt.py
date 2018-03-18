@@ -23,7 +23,7 @@ class PbcPyQt(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        self.openedFiles = {}
+        self.openedFiles = OrderedDict()
         self.isoValue = 10.**-2
         self.status = "Ready"
         self.initUI()
@@ -116,8 +116,12 @@ class PbcPyQt(QMainWindow):
 
 
     def processFolder(self, dirname):
-        for f in os.listdir(dirname):
-            self.processFile(os.path.join(dirname, f))
+        files = os.listdir(dirname)
+        files.sort()
+        for f in files:
+            f = os.path.join(dirname, f)
+            if os.path.isfile(f):
+                self.processFile(f)
 
 
     def processFile(self, filename):
@@ -172,14 +176,29 @@ class PbcPyQt(QMainWindow):
         self.listWidget.setMaximumWidth(200)
         self.listWidget.setSpacing(2)
         self.listModel = QStandardItemModel(self.listWidget)
+        self.listModel.itemChanged.connect(self.onItemChanged)
         self.listWidget.setModel(self.listModel)
+
 
     def addListItem(self, subsystem):
         #self.listWidget.addItem(subsystem.shortname)
         item = QStandardItem(subsystem.shortname)
         item.setCheckable(True)
         item.setCheckState(2)
+        item.setEditable(0)
         self.listModel.appendRow(item)
+
+
+    def onItemChanged(self, item):
+        l = list(self.openedFiles.items())
+        filename, frag = l[item.row()]
+        if item.checkState() == 2:
+            # is checked
+            self.ren.AddActor(frag.actor)
+        elif item.checkState() == 0:
+            # is unchecked
+            self.ren.RemoveActor(frag.actor)
+        self.vtkWidget.GetRenderWindow().Render()
 
 
     def closeFiles(self):
@@ -188,7 +207,7 @@ class PbcPyQt(QMainWindow):
         self.vtkWidget.GetRenderWindow().Render()
         n = len(self.openedFiles)
         self.listModel.removeRows(0,n)
-        self.openedFiles = {}
+        self.openedFiles = OrderedDict()
         
 
 
